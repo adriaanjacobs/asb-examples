@@ -1,5 +1,9 @@
 #include <stdio.h>
 
+/*
+ * clang -fsanitize=memory will find this behavior!
+ */
+
 struct padded_struct {
   char ch1; // 1 byte
   // 3 padding bytes
