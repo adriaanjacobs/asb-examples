@@ -1,0 +1,4 @@
+One of the binary was compiled with clang's -fsanitize=memory.
+While ran in GHUMVEE, a syscall mismatch mmap vs munmap is triggered due to the tool's address sensitivity.
+
+The other one just triggers an argument mismatch as expected. 

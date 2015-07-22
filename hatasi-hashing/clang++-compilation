@@ -1,0 +1,2 @@
+import os
+os.system("clang++ -fsanitize=memory -Wall sources/*.cpp -o bin/hatasi-hashing")
