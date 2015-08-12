@@ -2,8 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "taintgrind.h"
+
 size_t hash(void* ptr, size_t max) {
         size_t h = (size_t) ptr;
+        TNT_MAKE_MEM_TAINTED(&h, sizeof(size_t));
         srand(h);
         return rand() % max;
 }
