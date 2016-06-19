@@ -9,13 +9,17 @@ int main(int argc, char** argv) {
         printf("\n");
         
         Hatasi ht;
+
+        int cnt = 15;
+        int keys[15];
         
-        for (int i = 0; i < argc; ++i) {
-                ht.put(argv[i], i);
+        for (int i = 0; i < cnt; ++i) {
+            keys[i] = i;
+            ht.put(keys+i, i*2);
         }
         
-        for (int i = 0; i < argc; ++i) {
-                printf("%s  -->  %d\n", argv[i], ht.get(argv[i]));
+        for (int i = 0; i < cnt; ++i) {
+                printf("%d  -->  %d\n", keys[i], ht.get(keys+i));
         }
 
         return 0;
