@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
         }
         
         for (int i = 0; i < cnt; ++i) {
-                printf("%d  -->  %d\n", keys[i], ht.get(keys+i));
+            printf("%d  -->  %d\n", keys[i], ht.get(keys+i));
         }
 
         return 0;

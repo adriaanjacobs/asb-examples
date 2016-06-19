@@ -1,5 +1,5 @@
 %.o: %.cpp
-	../../ASBDetection/objectize.sh -O3 $^
+	../../ASBDetection/objectize.sh -O0 $^
 
 instr: main.o hatasi.o
 	../../ASBDetection/link.sh clang++ $^
