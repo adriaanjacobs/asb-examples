@@ -1,9 +1,10 @@
+*~
+bin
+.vscode
+
 # MVEE stuff
 MVEE.ini
 Logs
-
-*~
-bin
 
 # Compiled Object files
 *.slo
