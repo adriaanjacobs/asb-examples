@@ -5,7 +5,7 @@ AC_PREREQ([2.69])
 AC_INIT(hatasi, 1.0, davidpoetzsch@web.de)
 AM_INIT_AUTOMAKE(hatasi, 2.6)
 AC_CONFIG_SRCDIR([src/main.cpp])
-AC_CONFIG_HEADERS([config.h])
+#AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -23,6 +23,4 @@ AC_TYPE_SIZE_T
 
 # Checks for library functions.
 
-AC_CONFIG_FILES([Makefile
-                 src/Makefile])
 AC_OUTPUT(Makefile src/Makefile)
