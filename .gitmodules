@@ -1,0 +1,3 @@
+[submodule "glib-hashing/glib"]
+	path = glib-hashing/glib
+	url = https://gitlab.gnome.org/GNOME/glib.git
