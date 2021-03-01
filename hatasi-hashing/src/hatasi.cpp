@@ -3,8 +3,7 @@
 #include <stdlib.h>
 
 size_t hash(void* ptr, size_t max) {
-        size_t h = (size_t) ptr;
-        srand(h);
+        srand((size_t) ptr);
         return rand() % max;
 }
 
