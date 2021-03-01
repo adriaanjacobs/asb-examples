@@ -2,6 +2,9 @@
 bin
 .vscode
 
+# CodeQL DB
+asb-db
+
 # MVEE stuff
 MVEE.ini
 Logs
