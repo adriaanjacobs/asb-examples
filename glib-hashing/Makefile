@@ -16,3 +16,7 @@ glib: $(GLIB_HOME)/.git
 
 $(GLIB_HOME)/.git:
 	$(error please initialize the submodule at $(GLIB_HOME) before building)
+
+clean:
+	rm -rf bin
+	cd $(GLIB_BUILD) && ninja clean

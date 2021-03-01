@@ -1,14 +1,17 @@
 
-GLIB_HASHING_DIR = glib-hashing
-HATASI_HASHING_DIR = hatasi-hashing
-PADDED_STRUCT_DIR = padded-struct
-PRINT_STRUCT_DIR = print_struct
+TARGETS = glib-hashing hatasi-hashing padded-struct print_struct
 
-TARGETS = $(GLIB_HASHING_DIR) $(HATASI_HASHING_DIR) $(PADDED_STRUCT_DIR) $(PRINT_STRUCT_DIR)
-
-.PHONY: all $(TARGETS)
+.PHONY: all $(TARGETS) clean
 
 all: $(TARGETS)
 
 $(TARGETS): 
 	make -C $@
+
+clean: 
+	for file in $(TARGETS) ; do \
+        make -C $$file clean ; \
+    done
+
+
+	

@@ -11,3 +11,6 @@ unitialized-value:
 unitialized-struct:
 	mkdir -p bin
 	$(CC) -Wall sources/uninitialized-value.c -o bin/uninitialized-value
+
+clean:
+	rm -rf bin
