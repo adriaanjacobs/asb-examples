@@ -1,0 +1,14 @@
+
+GLIB_HASHING_DIR = glib-hashing
+HATASI_HASHING_DIR = hatasi-hashing
+PADDED_STRUCT_DIR = padded-struct
+PRINT_STRUCT_DIR = print_struct
+
+TARGETS = $(GLIB_HASHING_DIR) $(HATASI_HASHING_DIR) $(PADDED_STRUCT_DIR) $(PRINT_STRUCT_DIR)
+
+.PHONY: all $(TARGETS)
+
+all: $(TARGETS)
+
+$(TARGETS): 
+	make -C $@

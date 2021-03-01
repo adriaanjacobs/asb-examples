@@ -1,11 +1,12 @@
 
-GLIB_HOME = $(PWD)/glib
+GLIB_HOME = $(shell pwd)/glib
 GLIB_BUILD = $(GLIB_HOME)/_build
 
 .PHONY: glib-hashing glib
 
 glib-hashing: glib
-	$(CC) -I$(GLIB_HOME)/glib -I$(GLIB_HOME) -I$(GLIB_BUILD)/glib glib-hashing.c -L$(GLIB_BUILD) -lglib-2.0 -o bin/$@
+	mkdir -p bin
+	$(CC) -I$(GLIB_HOME)/glib -I$(GLIB_HOME) -I$(GLIB_BUILD)/glib sources/glib-hashing.c -L$(GLIB_BUILD) -lglib-2.0 -o bin/$@
 
 glib: $(GLIB_HOME)/.git
 	cd $(GLIB_HOME); \
@@ -14,4 +15,4 @@ glib: $(GLIB_HOME)/.git
 	ninja -C $(GLIB_BUILD)
 
 $(GLIB_HOME)/.git:
-	git submodule init
+	$(error please initialize the submodule at $(GLIB_HOME) before building)
