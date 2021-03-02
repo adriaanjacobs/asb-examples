@@ -9,17 +9,22 @@ struct dyn_array {
     size_t capacity;
 };
 
-size_t dyn_array_get_size(dyn_array* darr) {
+size_t dyn_array_size(dyn_array* darr) {
+    assert(darr != NULL);
     return darr->size;
 }
 
-dyn_array* dyn_array_init() {
-    dyn_array* darr = malloc(sizeof(*darr));
+dyn_array* dyn_array_alloc() {
+    return calloc(sizeof(dyn_array), 1);
+}
+
+void dyn_array_init(dyn_array* darr) {
+    assert(darr != NULL);
     memset(darr, 0, sizeof(*darr));
-    return darr;
 }
 
 void dyn_array_reserve(dyn_array* darr, size_t size) {
+    assert(darr != NULL);
     assert(size > darr->size); // downsizing not handled
 
     for (size_t i = darr->size; i < size; i++) 
@@ -27,8 +32,8 @@ void dyn_array_reserve(dyn_array* darr, size_t size) {
     assert(size == darr->size);
 }
 
-
 void dyn_array_add(dyn_array* darr, void* val) {
+    assert(darr != NULL);
     if(darr->size >= darr->capacity) {
         darr->capacity = (darr->capacity * 2) + 1;
         assert(darr->capacity != 0);
@@ -43,11 +48,17 @@ void dyn_array_add(dyn_array* darr, void* val) {
 }
 
 void** dyn_array_at(dyn_array* darr, size_t idx) {
+    assert(darr != NULL);
     assert(idx < darr->size);
     return darr->array + idx;
 }
 
-void dyn_array_destroy(dyn_array* darr) {
+void dyn_array_destruct(dyn_array* darr) {
+    assert(darr != NULL);
     free(darr->array);
     memset(darr, 0, sizeof(*darr));
+}
+
+void dyn_array_free(dyn_array* darr) {
+    free(darr);
 }

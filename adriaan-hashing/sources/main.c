@@ -1,9 +1,9 @@
 #include "hashtable.h"
-
+#include <malloc.h>
 
 int main() {
-
-    hashtable* table = hashtable_init(5, 10);
+    hashtable* table = hashtable_alloc();
+    hashtable_init(table, 5, 10);
 
     const size_t count = 100;
     int keys[count];
@@ -13,7 +13,9 @@ int main() {
         hashtable_put(table, keys + i, values + i);
     }
 
+
     hashtable_print(table);
 
-    hashtable_destroy(table);
+    hashtable_destruct(table);
+    hashtable_free(table);
 }

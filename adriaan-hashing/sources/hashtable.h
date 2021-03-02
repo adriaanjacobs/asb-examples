@@ -5,8 +5,9 @@
 
 typedef struct hashtable hashtable;
 
+hashtable* hashtable_alloc();
 
-hashtable* hashtable_init(size_t max_collisions, size_t initial_capacity);
+void hashtable_init(hashtable* table, size_t max_collisions, size_t initial_capacity);
 
 void hashtable_put(hashtable* table, void* key, void* value);
 
@@ -18,6 +19,8 @@ size_t hashtable_bucket_count(hashtable* table);
 
 void hashtable_print(hashtable* table);
 
-void hashtable_destroy(hashtable* table);
+void hashtable_destruct(hashtable* table);
+
+void hashtable_free(hashtable* table);
 
 #endif
