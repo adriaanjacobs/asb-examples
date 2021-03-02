@@ -6,7 +6,7 @@ GLIB_BUILD = $(GLIB_HOME)/_build
 
 glib-hashing: glib
 	mkdir -p bin
-	$(CC) -I$(GLIB_HOME)/glib -I$(GLIB_HOME) -I$(GLIB_BUILD)/glib sources/glib-hashing.c -L$(GLIB_BUILD) -lglib-2.0 -o bin/$@
+	$(CC) $(CFLAGS) -I$(GLIB_HOME)/glib -I$(GLIB_HOME) -I$(GLIB_BUILD)/glib sources/glib-hashing.c -L$(GLIB_BUILD) -lglib-2.0 -o bin/$@
 
 glib: $(GLIB_HOME)/.git
 	cd $(GLIB_HOME) && \

@@ -6,11 +6,11 @@ all: unitialized-value uninitialized-struct
 
 unitialized-value:
 	mkdir -p bin
-	$(CC) -Wall sources/uninitialized-struct.c -o bin/uninitialized-struct
+	$(CC) $(CFLAGS) sources/uninitialized-struct.c -o bin/uninitialized-struct
 
 unitialized-struct:
 	mkdir -p bin
-	$(CC) -Wall sources/uninitialized-value.c -o bin/uninitialized-value
+	$(CC) $(CFLAGS) sources/uninitialized-value.c -o bin/uninitialized-value
 
 clean:
 	rm -rf bin

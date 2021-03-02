@@ -3,8 +3,7 @@
 #include <stdlib.h>
 
 size_t hash(void* ptr, size_t max) {
-        srand((size_t) ptr);
-        return rand() % max;
+        return ((size_t) ptr) % max;
 }
 
 Hatasi::Hatasi() {

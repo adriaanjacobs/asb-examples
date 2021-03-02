@@ -16,6 +16,6 @@ int main(int argc, char** argv) {
     printf("The value 'Virginia' was %sfound and removed\n", found ? "" : "not ");
     
     g_hash_table_destroy(hash);
-      
+    
     return 0;
 }
