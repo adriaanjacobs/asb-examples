@@ -1,7 +1,7 @@
 
-TARGETS = glib-hashing hatasi-hashing padded-struct print_struct
+TARGETS = hatasi-hashing padded-struct print_struct adriaan-hashing # glib-hashing 
 
-CFLAGS= 
+CFLAGS = -Wall -Wextra
 export CFLAGS
 
 .PHONY: all $(TARGETS) clean codeql codeql-clean
@@ -19,8 +19,7 @@ clean:
 DB_NAME = asb-db
 
 codeql: codeql-clean clean
-	CFLAGS += -w
-	codeql database create --language=cpp --source-root=. --mode=brutal --command="make" -- $(DB_NAME)
+	codeql database create --language=cpp --source-root=. --mode=brutal --command="make CFLAGS='-w'" -- $(DB_NAME)
 
 codeql-clean:
 	rm -rf $(DB_NAME)

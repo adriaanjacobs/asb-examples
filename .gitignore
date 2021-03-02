@@ -1,6 +1,7 @@
 *~
 bin
 .vscode
+*.code-workspace
 
 # CodeQL DB
 asb-db

@@ -10,17 +10,17 @@ int main(int argc, char** argv) {
         
         Hatasi ht;
 
-        int cnt = 15;
-        int keys[15];
+        int cnt = 9999;
+        int keys[cnt];
         
         for (int i = 0; i < cnt; ++i) {
             keys[i] = i;
             ht.put(keys+i, i*2);
         }
         
-        for (int i = 0; i < cnt; ++i) {
-            printf("%d  -->  %d\n", keys[i], ht.get(keys+i));
-        }
+        // for (int i = 0; i < cnt; ++i) {
+        //     printf("%d  -->  %d\n", keys[i], ht.get(keys+i));
+        // }
 
         return 0;
 }

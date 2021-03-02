@@ -7,8 +7,8 @@ size_t hash(void* ptr, size_t max) {
 }
 
 Hatasi::Hatasi() {
-        capacity = 4;
-        maxCollisions = 1;
+        capacity = 20;
+        maxCollisions = 10;
         size = 0;
         newtable();
 }
@@ -29,6 +29,7 @@ void Hatasi::newtable() {
 }
 
 void Hatasi::resize() {
+        printf("Resize called\n");
         size_t oldcap = capacity;
         size_t oldMaxCollisions = maxCollisions;
         KVPair* oldtab = table;
