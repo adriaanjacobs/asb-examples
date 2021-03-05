@@ -6,15 +6,22 @@ export CFLAGS = -Wall -Wextra
 export CC = clang-10 -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
 export CXX = clang++-10 -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
 
-.PHONY: all $(TARGETS) clean codeql codeql-clean
+export ROOT_DIR = $(shell pwd)
+
+export USE_UNIFICATION_LIB = -I$(ROOT_DIR)/unification/include -L$(ROOT_DIR)/unification/bin -lunify -lstdc++
+
+.PHONY: all $(TARGETS) clean codeql codeql-clean unification
 
 all: $(TARGETS)
 
-$(TARGETS): 
+$(TARGETS): unification
+	make -C $@
+
+unification:
 	make -C $@
 
 clean: 
-	for file in $(TARGETS) ; do \
+	for file in $(TARGETS) unification ; do \
         make -C $$file clean ; \
     done
 
