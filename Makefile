@@ -15,20 +15,20 @@ export USE_UNIFICATION_LIB = -I$(ROOT_DIR)/unification/include -L$(ROOT_DIR)/uni
 all: $(TARGETS)
 
 $(TARGETS): unification
-	make -C $@
+	$(MAKE) -C $@
 
 unification:
-	make -C $@
+	$(MAKE) -C $@
 
 clean: 
 	for file in $(TARGETS) unification ; do \
-        make -C $$file clean ; \
+        $(MAKE) -C $$file clean ; \
     done
 
 DB_NAME = asb-db
 
 codeql: codeql-clean clean
-	codeql database create --language=cpp --source-root=. --mode=brutal --command="make CFLAGS='-w'" -- $(DB_NAME)
+	codeql database create --language=cpp --source-root=. --mode=brutal --command="$(MAKE) CFLAGS='-w'" -- $(DB_NAME)
 
 codeql-clean:
 	rm -rf $(DB_NAME)
