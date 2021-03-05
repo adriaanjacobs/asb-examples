@@ -4,15 +4,24 @@ TARGETS = hatasi-hashing padded-struct print_struct adriaan-hashing # glib-hashi
 CFLAGS = -Wall -Wextra
 export CFLAGS
 
-.PHONY: all $(TARGETS) clean codeql codeql-clean
+ROOT_DIR = $(shell pwd)
+export ROOT_DIR
+
+USE_UNIFICATION_LIB = -I$(ROOT_DIR)/unification/include -L$(ROOT_DIR)/unification/bin -lunify -lstdc++
+export USE_UNIFICATION_LIB
+
+.PHONY: all $(TARGETS) clean codeql codeql-clean unification
 
 all: $(TARGETS)
 
-$(TARGETS): 
+$(TARGETS): unification
+	make -C $@
+
+unification:
 	make -C $@
 
 clean: 
-	for file in $(TARGETS) ; do \
+	for file in $(TARGETS) unification ; do \
         make -C $$file clean ; \
     done
 

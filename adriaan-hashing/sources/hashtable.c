@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <assert.h>
+#include <unify.h>
 
 typedef struct kv_pair {
     void* key;
@@ -36,6 +37,19 @@ size_t hashtable_count_pairs(hashtable* table) {
     return count;
 }
 
+void hashtable_put(hashtable* table, void* key, void* value) {
+    assert(table != NULL);
+    if (hashtable_most_collisions(table) > table->max_collisions)  // arbitrary rehash point
+        hashtable_rehash(table, 2 * hashtable_bucket_count(table));
+    assert(hashtable_bucket_count(table) != 0);
+
+    kv_pair_t* pair = malloc(sizeof(*pair));
+    pair->key = key;
+    pair->value = value;
+    size_t idx = hash((key)) % hashtable_bucket_count(table);
+    dyn_array_add(*dyn_array_at(table->buckets, idx), pair);
+}
+
 hashtable* hashtable_alloc() {
     return malloc(sizeof(hashtable));
 }
@@ -52,19 +66,6 @@ void hashtable_init(hashtable* table, size_t max_collisions, size_t initial_capa
     }
 
     table->max_collisions = max_collisions;
-}
-
-void hashtable_put(hashtable* table, void* key, void* value) {
-    assert(table != NULL);
-    if (hashtable_most_collisions(table) > table->max_collisions)  // arbitrary rehash point
-        hashtable_rehash(table, 2 * hashtable_bucket_count(table));
-    assert(hashtable_bucket_count(table) != 0);
-
-    kv_pair_t* pair = malloc(sizeof(*pair));
-    pair->key = key;
-    pair->value = value;
-    size_t idx = hash(key) % hashtable_bucket_count(table);
-    dyn_array_add(*dyn_array_at(table->buckets, idx), pair);
 }
 
 void hashtable_rehash(hashtable* table, size_t new_capacity) {
@@ -88,6 +89,17 @@ void hashtable_rehash(hashtable* table, size_t new_capacity) {
 size_t hashtable_bucket_count(hashtable* table) {
     assert(table != NULL);
     return dyn_array_size(table->buckets);
+}
+
+void hashtable_foreach(hashtable* table, void (*func)(void* key, void* value)) {
+    assert(table != NULL);
+    for (size_t buck = 0; buck < hashtable_bucket_count(table); buck++) {
+        dyn_array* bucket = *dyn_array_at(table->buckets, buck);
+        for (size_t p_i = 0; p_i < dyn_array_size(bucket); p_i++) {
+            kv_pair_t* pair = *dyn_array_at(bucket, p_i);
+            func(pair->key, pair->value);
+        }
+    }
 }
 
 void hashtable_print(hashtable* table) {

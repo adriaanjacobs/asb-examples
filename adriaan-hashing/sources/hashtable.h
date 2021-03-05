@@ -19,6 +19,8 @@ size_t hashtable_bucket_count(hashtable* table);
 
 void hashtable_print(hashtable* table);
 
+void hashtable_foreach(hashtable* table, void (*func)(void* key, void* value));
+
 void hashtable_destruct(hashtable* table);
 
 void hashtable_free(hashtable* table);
