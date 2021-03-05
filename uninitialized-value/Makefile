@@ -1,14 +1,14 @@
 
 
-.PHONY: unitialized-value uninitialized-struct all
+.PHONY: uninitialized-value uninitialized-struct all
 
-all: unitialized-value uninitialized-struct
+all: uninitialized-value uninitialized-struct
 
-unitialized-value:
+uninitialized-struct:
 	mkdir -p bin
 	$(CC) $(CFLAGS) sources/uninitialized-struct.c -o bin/uninitialized-struct
 
-unitialized-struct:
+uninitialized-value:
 	mkdir -p bin
 	$(CC) $(CFLAGS) sources/uninitialized-value.c -o bin/uninitialized-value
 

@@ -1,8 +1,10 @@
 
-TARGETS = hatasi-hashing padded-struct print_struct adriaan-hashing # glib-hashing 
+TARGETS = hatasi-hashing padded-struct print_struct adriaan-hashing uninitialized-value # glib-hashing 
 
-CFLAGS = -Wall -Wextra
-export CFLAGS
+export CFLAGS = -Wall -Wextra
+
+export CC = clang-10 -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
+export CXX = clang++-10 -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
 
 .PHONY: all $(TARGETS) clean codeql codeql-clean
 
