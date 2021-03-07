@@ -12,7 +12,7 @@ struct padded_struct {
   int i2;   // 4 bytes
 };
 
-int main(int argc, char *argv[]) {
+int main() {
   struct padded_struct foo;
     
   foo.ch1 = 'a';

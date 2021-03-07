@@ -1,10 +1,12 @@
 
 TARGETS = hatasi-hashing padded-struct print_struct adriaan-hashing uninitialized-value # glib-hashing 
 
-export CFLAGS = -Wall -Wextra
+FLAGS = -Wall -Wextra -pedantic -Wno-int-conversion -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
+export CFLAGS = $(FLAGS) -std=c99 
+export CXXFLAGS = $(FLAGS) -std=c++20
 
-export CC = clang-10 -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
-export CXX = clang++-10 -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
+export CC = clang-10 
+export CXX = clang++-10 
 
 export ROOT_DIR = $(shell pwd)
 

@@ -1,12 +1,18 @@
+UNIFY_IMPLS = unify_allocator_impl unify_64bit_impl
 
+.PHONY: unification dyn_alloc_zero $(UNIFY_IMPLS)
 
-.PHONY: unification
+unification: $(UNIFY_IMPLS)
+	ar rcs bin/libunify.a $^ && \
+	rm $^
 
-unification: 
-	mkdir -p bin
-	$(CXX) $(CFLAGS) -std=c++1z -Iinclude unify.cpp -c -o bin/tmp.o
-	ar rcs bin/libunify.a bin/tmp.o
-	rm bin/tmp.o
+$(UNIFY_IMPLS): dyn_alloc_zero
+	mkdir -p bin && \
+	$(CXX) $(CXXFLAGS) -Iinclude $@.cpp -c -o $@
+
+dyn_alloc_zero:
+	mkdir -p bin && \
+	$(CC) $(CFLAGS) $@.c -shared -fPIC $(USE_UNIFICATION_LIB) -o bin/lib$@.so
 
 clean:
 	rm -rf bin

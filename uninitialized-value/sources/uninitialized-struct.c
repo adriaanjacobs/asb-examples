@@ -11,7 +11,7 @@ struct s
  int b;
 }; 
 
-int main(int argc, char** argv) {
+int main() {
 
   struct s test;
   printf("%d\n", test.a); 

@@ -15,7 +15,7 @@ void intermediatefunction()
 }
   
 
-int main(int argc, char** argv) {
+int main() {
 
   intermediatefunction(); 
   return 0;

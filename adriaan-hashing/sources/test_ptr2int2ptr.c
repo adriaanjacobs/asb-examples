@@ -3,7 +3,7 @@
 
 void print_bucket(void* key, void* value) {
     printf("About to print \n");
-    printf("%d --> %d\n", key, value);
+    printf("%d --> %d\n", (int)key, (int)value);
 }
 
 int main() {
@@ -27,3 +27,4 @@ int main() {
     hashtable_destruct(table);
     hashtable_free(table);
 }
+
