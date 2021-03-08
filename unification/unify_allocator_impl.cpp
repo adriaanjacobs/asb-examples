@@ -9,7 +9,7 @@ static_assert(sizeof(char) == 1);
 
 struct alloc_entry {
     void* allocation;
-    size_t size; 
+    size_t size; // 1 byte bigger than the allocated size
 
     bool operator == (void* other) const {
         return allocation == other;
@@ -23,6 +23,7 @@ static std::vector<bool> free_list;
 extern "C" {
 
 void* register_alloc(void* ptr, size_t bytes) {
+    bytes += 1; // pointers may point to 1 past an array
 
     { // DEBUG
         auto again = std::find(alloc_list.begin(), alloc_list.end(), ptr);
@@ -85,7 +86,7 @@ void* unregister_alloc(void* ptr) {
 
 uintptr_t unify(void* v_addr) {
     for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list.size(); idx++, occ_idx += alloc_list[idx].size) {
-        if (v_addr >= alloc_list[idx].allocation && v_addr < (static_cast<char*>(alloc_list[idx].allocation) + alloc_list[idx].size))
+        if (v_addr >= alloc_list[idx].allocation && v_addr <= (static_cast<char*>(alloc_list[idx].allocation) + alloc_list[idx].size))
             return occ_idx + (static_cast<char*>(v_addr) - static_cast<char*>(alloc_list[idx].allocation));
     }
 
@@ -95,7 +96,7 @@ uintptr_t unify(void* v_addr) {
 
 void* deunify(uintptr_t u_addr) {
     for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list.size(); idx++, occ_idx += alloc_list[idx].size) {
-         if (u_addr >= occ_idx && u_addr < occ_idx + alloc_list[idx].size)
+         if (u_addr >= occ_idx && u_addr <= occ_idx + alloc_list[idx].size)
             return static_cast<char*>(alloc_list[idx].allocation) + (u_addr - occ_idx);
     }
 
@@ -106,7 +107,7 @@ void* deunify(uintptr_t u_addr) {
 size_t size_of_alloc(void* ptr) {
     auto entry = std::find(alloc_list.begin(), alloc_list.end(), ptr);
     assert(entry != alloc_list.end());
-    return entry->size;
+    return entry->size - 1;
 }
 
 }
