@@ -5,8 +5,8 @@ FLAGS = -Wall -Wextra -pedantic -Wno-int-conversion -ftrivial-auto-var-init=zero
 export CFLAGS = $(FLAGS) -std=c99 
 export CXXFLAGS = $(FLAGS) -std=c++20
 
-export CC = clang-10 
-export CXX = clang++-10 
+export CC = ~/ASB-clang/compiler_build/bin/clang
+export CXX = ~/ASB-clang/compiler_build/bin/clang++
 
 export ROOT_DIR = $(shell pwd)
 

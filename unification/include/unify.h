@@ -18,6 +18,8 @@ EXTERNC uintptr_t unify(void* v_addr);
 
 EXTERNC void* deunify(uintptr_t u_addr);
 
+EXTERNC size_t size_of_alloc(void* ptr);
+
 #undef EXTERNC
 
 // __NO_INLINE__ can be used to detect if we need the boolean

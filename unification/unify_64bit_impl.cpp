@@ -54,7 +54,8 @@ void* unregister_alloc(void* ptr) {
 
 uintptr_t unify(void* v_addr) {
     auto alloc = std::find_if(alloc_list.begin(), alloc_list.end(), [v_addr](void* ptr) {
-        return v_addr >= ptr && v_addr < (static_cast<char*>(ptr) + ALIGNED_SIZE); //This is not legal C. Will it work though? 
+        // //This is not safe C. It will work though (I think) in flat memory model archs
+        return v_addr >= ptr && v_addr < (static_cast<char*>(ptr) + ALIGNED_SIZE); 
     });
     assert(alloc != alloc_list.end());
 

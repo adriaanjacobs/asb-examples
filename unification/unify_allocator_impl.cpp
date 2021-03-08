@@ -95,12 +95,18 @@ uintptr_t unify(void* v_addr) {
 
 void* deunify(uintptr_t u_addr) {
     for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list.size(); idx++, occ_idx += alloc_list[idx].size) {
-        if (u_addr >= occ_idx && u_addr < occ_idx + alloc_list[idx].size)
+         if (u_addr >= occ_idx && u_addr < occ_idx + alloc_list[idx].size)
             return static_cast<char*>(alloc_list[idx].allocation) + (u_addr - occ_idx);
     }
 
     assert(false && "u_addr was not contained in any of the alloc_entries!");
     return 0;
+}
+
+size_t size_of_alloc(void* ptr) {
+    auto entry = std::find(alloc_list.begin(), alloc_list.end(), ptr);
+    assert(entry != alloc_list.end());
+    return entry->size;
 }
 
 }
