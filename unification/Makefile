@@ -8,12 +8,15 @@ UNIFICATION_DIR = $(ROOT_DIR)/unification
 
 dyn_alloc_zero: $(UNIFY_IMPLS)
 	mkdir -p bin && \
-	ln -sf $(UNIFICATION_DIR)/bin/lib$(SELECTED_UNIFY_IMPL).so $(UNIFICATION_DIR)/bin/libunify.so && \
+	ln -sf $(UNIFICATION_DIR)/bin/lib$(SELECTED_UNIFY_IMPL).a $(UNIFICATION_DIR)/bin/libunify.a && \
 	$(CC) $(CFLAGS) $@.c -shared -fPIC $(USE_UNIFICATION_LIB) -o bin/lib$@.so
 
 $(UNIFY_IMPLS):
 	mkdir -p bin && \
-	$(CXX) $(CXXFLAGS) -shared -fPIC -Iinclude $@.cpp -o bin/lib$@.so
+	$(CXX) $(CXXFLAGS) -Iinclude $@.cpp -fPIC -c -o bin/$@.o && \
+	ar rcs bin/lib$@.a bin/$@.o && \
+	rm bin/$@.o
+
 
 clean:
 	rm -rf bin

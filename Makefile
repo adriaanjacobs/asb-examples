@@ -1,9 +1,9 @@
 
 TARGETS = hatasi-hashing padded-struct print_struct adriaan-hashing uninitialized-value # glib-hashing 
 
-FLAGS = -Wall -Wextra -pedantic -Wno-int-conversion -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
+FLAGS = -ggdb -Wall -Wextra -pedantic -Wno-int-conversion -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
 export CFLAGS = $(FLAGS) -std=c99 
-export CXXFLAGS = $(FLAGS) -std=c++20
+export CXXFLAGS = $(FLAGS) -std=c++20 
 
 export CC = ~/ASB-clang/compiler_build/bin/clang
 export CXX = ~/ASB-clang/compiler_build/bin/clang++

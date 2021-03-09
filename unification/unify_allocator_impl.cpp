@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <assert.h>
+#include <iostream>
 
 static_assert(sizeof(char) == 1);
 
@@ -17,12 +18,13 @@ struct alloc_entry {
 };
 
 // again, SOA thing
-static std::vector<alloc_entry> alloc_list;
-static std::vector<bool> free_list;
+std::vector<alloc_entry> alloc_list{};
+std::vector<bool> free_list{};
 
 extern "C" {
 
 void* register_alloc(void* ptr, size_t bytes) {
+    printf("Register_alloc called for %p (%lu bytes)\n", ptr, bytes);
     bytes += 1; // pointers may point to 1 past an array
 
     { // DEBUG
@@ -51,10 +53,12 @@ void* register_alloc(void* ptr, size_t bytes) {
     }
 
     assert(free_list.size() == alloc_list.size());
+
     return ptr;
 }
 
 void* unregister_alloc(void* ptr) {
+    printf("Unregister_alloc called for %p\n", ptr);
     { // iterator invalidation protection
         auto entry = std::find(alloc_list.begin(), alloc_list.end(), ptr);
         assert(entry != alloc_list.end());
@@ -80,6 +84,7 @@ void* unregister_alloc(void* ptr) {
     }
 
     assert(free_list.size() == alloc_list.size());
+    printf("Return from unregister_alloc with list sizes = %lu\n", free_list.size());
     assert(!*free_list.rbegin());
     return ptr;
 }
@@ -108,6 +113,34 @@ size_t size_of_alloc(void* ptr) {
     auto entry = std::find(alloc_list.begin(), alloc_list.end(), ptr);
     assert(entry != alloc_list.end());
     return entry->size - 1;
+}
+
+// void print_metadata() {
+//     std::cout << "----------------" << std::endl;
+//     for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list.size(); idx++, occ_idx += alloc_list[idx].size) {
+//         std::cout << "idx: " << idx << std::endl;
+//         std::cout << "occ_idx: " << occ_idx << std::endl;
+//         std::cout << "  allocation: " << alloc_list.at(idx).allocation << std::endl;
+//         std::cout << "  size: " << alloc_list.at(idx).size << std::endl;
+//         std::cout << "  free: " << free_list.at(idx) << std::endl;
+//         std::cout << "----------------" << std::endl;
+//     }
+// }
+
+
+// This is used for debugging and should not dynamically allocate memory (to simplify)
+void print_metadata() {
+    printf("------START-----\n");
+    printf("Size of alloc_list: %lu\n", alloc_list.size());
+    printf("Size of free_list: %lu\n", free_list.size());
+    printf("----------------\n");
+    for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list.size(); idx++, occ_idx += alloc_list[idx].size) {
+        char fmt[] = "idx: %lu \n" "occ_idx: %lu \n" "  allocation: %p \n" "  size: %lu \n" "  free: %s \n" "----------------\n";
+        char buffer[1000] = {'\0'};
+        sprintf(buffer, fmt, idx, occ_idx, alloc_list.at(idx).allocation, alloc_list.at(idx).size, free_list.at(idx) ? "true" : "false");
+        printf("%s", buffer);
+    }
+    printf("-----FINISH-----\n");
 }
 
 }

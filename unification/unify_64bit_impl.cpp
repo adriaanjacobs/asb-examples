@@ -3,6 +3,8 @@
 #include <vector>
 #include <algorithm>
 #include <assert.h>
+#include <iostream>
+
 
 static_assert(sizeof(uintptr_t) == 8);
 static_assert(sizeof(char) == 1);
@@ -66,6 +68,17 @@ uintptr_t unify(void* v_addr) {
 
 void* deunify(uintptr_t u_addr) {
     return static_cast<char*>(alloc_list.at((u_addr >> OFFSET_WIDTH))) + (u_addr & ALIGNED_SIZE);
+}
+
+void print_metadata() {
+    std::cout << "----------------" << std::endl;
+    for (uintptr_t idx = 0; idx < alloc_list.size(); idx++) {
+        std::cout << "idx: " << idx << std::endl;
+        std::cout << "occ_idx: " << (idx << OFFSET_WIDTH) << std::endl;
+        std::cout << "  allocation: " << alloc_list.at(idx) << std::endl;
+        std::cout << "  free: " << free_list.at(idx) << std::endl;
+        std::cout << "----------------" << std::endl;
+    }
 }
 
 

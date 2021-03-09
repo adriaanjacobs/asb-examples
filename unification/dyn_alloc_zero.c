@@ -2,6 +2,7 @@
     #define _GNU_SOURCE
 #endif
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <dlfcn.h>
 #include <memory.h>
@@ -29,6 +30,8 @@
 
 #define powerof2(x) ((x != 0) && ((x & (x - 1)) == 0))
 
+// should use atexit(...) and unhook all of the allocators at program exit 
+// (I'm worried about the deallocation of the vectors in libunify.so)
 
 // Allocate a block of size bytes. See Basic Allocation.
 void* malloc(size_t bytes) {
@@ -40,7 +43,15 @@ void* malloc(size_t bytes) {
     no_hook = true;
 
     void* ret = real_malloc(bytes); 
-    register_alloc(ret, bytes);
+
+    printf("My malloc called for %lu bytes, returning %p \n", bytes, ret);
+    printf("Caller: \n");
+    // printf("Registering address %p with size %ld\n", ret, bytes);
+    // printf("Before register_alloc: \n");
+    // print_metadata();
+    //register_alloc(ret, bytes);
+    // printf("After register_alloc: \n");
+    // print_metadata();
     memset(ret, 0, bytes);
 
     no_hook = false;
@@ -57,8 +68,14 @@ void free (void *addr) {
     }
     no_hook = true;
 
-    unregister_alloc(addr);
+    // printf("Unregistering address %p\n", addr);
+    // printf("Before unregister_alloc: \n");
+    // print_metadata();
+    //unregister_alloc(addr);
+    // printf("After unregister_alloc: \n");
+    // print_metadata();
     real_free(addr); // does not necessarily need to be protected
+    printf("My free called on %p \n", addr);
     
     no_hook = false;
 }
@@ -85,12 +102,13 @@ void *reallocarray (void *ptr, size_t nmemb, size_t size) {
 void *calloc (size_t count, size_t eltsize) {
     // Since dlsym calls `calloc` when linked with pthread
     // I cannot let this guy go to libc
+    printf("Calloc called. dlsym maybe? \n");
     return malloc(count * eltsize);
 }
 
 // Allocate a block of size bytes, starting on an address that is a multiple of boundary. See Aligned Memory Blocks.
 void *memalign (size_t alignment, size_t size) {
-    GENERATE_DLSYM(size_t, memalign, size_t, size_t);
+    GENERATE_DLSYM(void *, memalign, size_t, size_t);
     static __thread bool no_hook = false;
     if (no_hook) 
         return real_memalign(alignment, size);

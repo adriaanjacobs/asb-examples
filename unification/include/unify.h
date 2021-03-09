@@ -4,23 +4,30 @@
 #include <stdint.h>
 #include <stddef.h>
 
+// I should maybe make sure these symbols are more unique.
+// They get preloaded and I don't want to intercept any calls to them.
+
 #ifdef __cplusplus
-    #define EXTERNC extern "C"
-#else
-    #define EXTERNC
+extern "C" {
 #endif
 
-EXTERNC void* register_alloc(void* ptr, size_t bytes);
+void* register_alloc(void* ptr, size_t bytes);
 
-EXTERNC void* unregister_alloc(void* ptr);
+void* unregister_alloc(void* ptr);
 
-EXTERNC uintptr_t unify(void* v_addr);
+uintptr_t unify(void* v_addr);
 
-EXTERNC void* deunify(uintptr_t u_addr);
+void* deunify(uintptr_t u_addr);
 
-EXTERNC size_t size_of_alloc(void* ptr);
+// I don't think every allocation algorithm implementation exposes this. 
+// Maybe only the aligned_up size? Would not be a problem
+size_t size_of_alloc(void* ptr);
 
-#undef EXTERNC
+void print_metadata();
+
+#ifdef __cplusplus
+}
+#endif
 
 // __NO_INLINE__ can be used to detect if we need the boolean
 
