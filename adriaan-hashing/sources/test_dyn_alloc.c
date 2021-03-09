@@ -2,31 +2,60 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <memory.h>
+#include <unify.h>
+
+#include <sys/mman.h>
+
+void check_int(size_t i) {
+    assert(unify(deunify(i)) == i);
+}
+
+void check_int_range (size_t i, size_t size) {
+    for (; i <= i + size; i++) {
+        check_int(i);
+    }
+}
+
+void check_ptr(void* p) {
+    assert(deunify(unify(p)) == p);
+}
+
+void check_ptr_range(char* p, size_t size) {
+    for (; p <= p + size; p++) {
+        check_ptr(p);
+    }
+}
 
 int main() {
     size_t size = 10 * sizeof(double);
 
     {
-        void *a = malloc(size);
+        void *a = register_alloc(malloc(size), size);
         memset(a, 0xdeadbeef, size);
-        free(a);
+        free(unregister_alloc(a));
     }
 
-    //char* block = malloc(size);
-    //char* zeroblock = calloc(1, size);
+    char* block = register_alloc(malloc(size), size);
+    char* zeroblock = register_alloc(calloc(1, size), size);
 
-    //printf("is memory the same? %d\n", memcmp(block, zeroblock, size) == 0);
+    printf("is memory the same? %d\n", memcmp(block, zeroblock, size) == 0);
 
-    // size_t as_int = (size_t) block;
-    // double* block_1 = (double*) (as_int + sizeof(double));
-    // double* block_9 = (double*) (as_int + 9*sizeof(double));
+    // size_t as_int = (size_t) unify(block);
+    // double* block_1 = (double*) deunify(as_int + sizeof(double));
+    // double* block_9 = (double*) deunify(as_int + 9*sizeof(double));
     // *block_1 = 9.6;
     // *block_9 = 88.8;
     // double* one_past_block = block_9 + 1;
     // size_t one_past_as_int = as_int + 10*sizeof(double);
-    
-    // assert((size_t)one_past_block == one_past_as_int);
-    // assert((double*)one_past_as_int == one_past_block);
 
+    // check_int_range(as_int, size);
+    // check_ptr_range(block, size);
+    // check_int_range(unify(zeroblock), size);
+    // check_ptr_range(zeroblock, size);
+
+    unregister_alloc(NULL);
+
+    free (unregister_alloc(block));
+    free (unregister_alloc(zeroblock));
 }
 

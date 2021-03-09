@@ -14,7 +14,6 @@
 
 #include <unify.h>
 
-
 #define LIKELY(expr) __builtin_expect(!!(expr), 1)
 #define UNLIKELY(expr) __builtin_expect(!!(expr), 0)
 
@@ -30,54 +29,52 @@
 
 #define powerof2(x) ((x != 0) && ((x & (x - 1)) == 0))
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // should use atexit(...) and unhook all of the allocators at program exit 
 // (I'm worried about the deallocation of the vectors in libunify.so)
+
+static __thread bool hook_active = false;
+
+void hook_all() {
+    hook_active = true;
+}
+
+void unhook_all() {
+    hook_active = false;
+}
 
 // Allocate a block of size bytes. See Basic Allocation.
 void* malloc(size_t bytes) {
     // dl_sym does not call malloc
     GENERATE_DLSYM(void*, malloc, size_t);
-    static __thread bool no_hook = false;
-    if (no_hook) 
+    if (!hook_active) 
         return real_malloc(bytes);
-    no_hook = true;
+    unhook_all();
 
     void* ret = real_malloc(bytes); 
-
     printf("My malloc called for %lu bytes, returning %p \n", bytes, ret);
-    printf("Caller: \n");
-    // printf("Registering address %p with size %ld\n", ret, bytes);
-    // printf("Before register_alloc: \n");
-    // print_metadata();
-    //register_alloc(ret, bytes);
-    // printf("After register_alloc: \n");
-    // print_metadata();
     memset(ret, 0, bytes);
 
-    no_hook = false;
+    hook_all();
     return ret;
 }
 
 // Free a block previously allocated by malloc. See Freeing after Malloc.
 void free (void *addr) {
     GENERATE_DLSYM(void, free, void*);
-    static __thread bool no_hook = false;
-    if (no_hook) {
+    if (!hook_active)  {
         real_free(addr);
         return;
     }
-    no_hook = true;
+    unhook_all();
 
-    // printf("Unregistering address %p\n", addr);
-    // printf("Before unregister_alloc: \n");
-    // print_metadata();
-    //unregister_alloc(addr);
-    // printf("After unregister_alloc: \n");
-    // print_metadata();
     real_free(addr); // does not necessarily need to be protected
     printf("My free called on %p \n", addr);
     
-    no_hook = false;
+    hook_all();
 }
 
 // Make a block previously allocated by malloc larger or smaller, possibly by copying it to a new location. See Changing Block Size.
@@ -109,16 +106,14 @@ void *calloc (size_t count, size_t eltsize) {
 // Allocate a block of size bytes, starting on an address that is a multiple of boundary. See Aligned Memory Blocks.
 void *memalign (size_t alignment, size_t size) {
     GENERATE_DLSYM(void *, memalign, size_t, size_t);
-    static __thread bool no_hook = false;
-    if (no_hook) 
+    if (!hook_active)  
         return real_memalign(alignment, size);
-    no_hook = true;
+    unhook_all();
 
     void* ret = real_memalign(alignment, size); 
-    register_alloc(ret, size);
     memset(ret, 0, size);
 
-    no_hook = false;
+    hook_all();
     return ret;
 }
 
@@ -148,3 +143,7 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) {
     return EINVAL;
 }
 
+
+#ifdef __cplusplus
+}
+#endif

@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <iostream>
 
+#include "unify_common.h"
+
 static_assert(sizeof(char) == 1);
 
 struct alloc_entry {
@@ -17,19 +19,21 @@ struct alloc_entry {
     }
 };
 
+dummy_initialization init;
+
 // again, SOA thing
-std::vector<alloc_entry> alloc_list{};
-std::vector<bool> free_list{};
+static std::vector<alloc_entry> alloc_list = {{nullptr, 1}};
+static std::vector<bool> free_list = {false};
 
 extern "C" {
 
 void* register_alloc(void* ptr, size_t bytes) {
-    printf("Register_alloc called for %p (%lu bytes)\n", ptr, bytes);
+    unhook_scope guard{};
     bytes += 1; // pointers may point to 1 past an array
 
     { // DEBUG
         auto again = std::find(alloc_list.begin(), alloc_list.end(), ptr);
-        assert(again == alloc_list.end());
+        assert(again == alloc_list.end()); // nullptr?
     }
 
     // first fit
@@ -54,11 +58,15 @@ void* register_alloc(void* ptr, size_t bytes) {
 
     assert(free_list.size() == alloc_list.size());
 
+    printf("`register_alloc`(%p, %lu) returns %p\n", ptr, bytes, ptr);
+    // printf("Current metadata: \n");
+    // print_metadata();
+
     return ptr;
 }
 
 void* unregister_alloc(void* ptr) {
-    printf("Unregister_alloc called for %p\n", ptr);
+    unhook_scope guard{};
     { // iterator invalidation protection
         auto entry = std::find(alloc_list.begin(), alloc_list.end(), ptr);
         assert(entry != alloc_list.end());
@@ -84,15 +92,21 @@ void* unregister_alloc(void* ptr) {
     }
 
     assert(free_list.size() == alloc_list.size());
-    printf("Return from unregister_alloc with list sizes = %lu\n", free_list.size());
     assert(!*free_list.rbegin());
+
+    printf("`unregister_alloc`(%p) returns %p\n", ptr, ptr);
+
     return ptr;
 }
 
 uintptr_t unify(void* v_addr) {
+    unhook_scope guard{};
     for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list.size(); idx++, occ_idx += alloc_list[idx].size) {
-        if (v_addr >= alloc_list[idx].allocation && v_addr <= (static_cast<char*>(alloc_list[idx].allocation) + alloc_list[idx].size))
-            return occ_idx + (static_cast<char*>(v_addr) - static_cast<char*>(alloc_list[idx].allocation));
+        if (v_addr >= alloc_list[idx].allocation && v_addr <= (static_cast<char*>(alloc_list[idx].allocation) + alloc_list[idx].size)) {
+            uintptr_t ret = occ_idx + (static_cast<char*>(v_addr) - static_cast<char*>(alloc_list[idx].allocation));
+            printf("`unify(%p)` returns %lu \n", v_addr, ret);
+            return ret;
+        }
     }
 
     assert(false && "v_addr was not contained in any of the alloc_entries!");
@@ -100,9 +114,13 @@ uintptr_t unify(void* v_addr) {
 }
 
 void* deunify(uintptr_t u_addr) {
+    unhook_scope guard{};
     for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list.size(); idx++, occ_idx += alloc_list[idx].size) {
-         if (u_addr >= occ_idx && u_addr <= occ_idx + alloc_list[idx].size)
-            return static_cast<char*>(alloc_list[idx].allocation) + (u_addr - occ_idx);
+        if (u_addr >= occ_idx && u_addr <= occ_idx + alloc_list[idx].size) {
+            void* ret = static_cast<char*>(alloc_list[idx].allocation) + (u_addr - occ_idx);
+            printf("`deunify(%lu)` returns %p \n", u_addr, ret);
+            return ret;
+        }
     }
 
     assert(false && "u_addr was not contained in any of the alloc_entries!");
@@ -110,6 +128,7 @@ void* deunify(uintptr_t u_addr) {
 }
 
 size_t size_of_alloc(void* ptr) {
+    unhook_scope guard{};
     auto entry = std::find(alloc_list.begin(), alloc_list.end(), ptr);
     assert(entry != alloc_list.end());
     return entry->size - 1;
@@ -128,8 +147,10 @@ size_t size_of_alloc(void* ptr) {
 // }
 
 
-// This is used for debugging and should not dynamically allocate memory (to simplify)
+// This is used for debugging and should not dynamically allocate memory 
+// Actually with the guard now it can
 void print_metadata() {
+    unhook_scope guard{};
     printf("------START-----\n");
     printf("Size of alloc_list: %lu\n", alloc_list.size());
     printf("Size of free_list: %lu\n", free_list.size());
