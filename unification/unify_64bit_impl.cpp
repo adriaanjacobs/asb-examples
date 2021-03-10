@@ -14,15 +14,13 @@ static_assert(sizeof(char) == 1);
 constexpr size_t ALIGNED_SIZE = UINT32_MAX;
 constexpr size_t OFFSET_WIDTH = UINT32_WIDTH;
 
-dummy_initialization init;
-
 // SOA type thing
 static std::vector<void*> alloc_list;
 static std::vector<bool> free_list;
 // would it be possible to use `nullptr` as free? That's assuming I never map nullptr
 // I should query for patterns then like 
 //          ((int)ptr) == 0 
-//          (void*)some_int == nullptr
+//          (void*)some_int == nullptr 
 // extra implementation complexity is likely not worth removing the small vector<bool> memory overhead 
 // (maybe for caching it is worth it)
 

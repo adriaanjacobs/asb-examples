@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <functional>
 
 #include "dyn_alloc_zero.h"
 
@@ -13,11 +14,16 @@ struct unhook_scope {
     }
 };
 
-struct dummy_initialization {
-    dummy_initialization() {
-        // atexit runs before global object destruction
-        atexit(unhook_all);
+struct run {
+    std::function<void()> destr;
+    run(std::function<void()> constr, std::function<void()> destr) {
+        if (constr) 
+            constr();
+        this->destr = destr;
+    }
+
+    ~run() {
+        if (destr)
+            destr();
     }
 };
-
-extern dummy_initialization init;

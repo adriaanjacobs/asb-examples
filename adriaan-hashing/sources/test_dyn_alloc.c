@@ -30,13 +30,13 @@ int main() {
     size_t size = 10 * sizeof(double);
 
     {
-        void *a = register_alloc(malloc(size), size);
+        void *a = malloc(size);
         memset(a, 0xdeadbeef, size);
-        free(unregister_alloc(a));
+        free((a));
     }
 
-    char* block = register_alloc(malloc(size), size);
-    char* zeroblock = register_alloc(calloc(1, size), size);
+    char* block = malloc(size);
+    char* zeroblock = calloc(1, size);
 
     printf("is memory the same? %d\n", memcmp(block, zeroblock, size) == 0);
 
@@ -53,9 +53,7 @@ int main() {
     // check_int_range(unify(zeroblock), size);
     // check_ptr_range(zeroblock, size);
 
-    unregister_alloc(NULL);
-
-    free (unregister_alloc(block));
-    free (unregister_alloc(zeroblock));
+    free (block);
+    free (zeroblock);
 }
 

@@ -33,9 +33,6 @@
 extern "C" {
 #endif
 
-// should use atexit(...) and unhook all of the allocators at program exit 
-// (I'm worried about the deallocation of the vectors in libunify.so)
-
 static __thread bool hook_active = false;
 
 void hook_all() {
@@ -46,16 +43,34 @@ void unhook_all() {
     hook_active = false;
 }
 
+static void* (*real_malloc)(size_t) = NULL;
+static void (*real_free)(void*) = NULL;
+static void* (*real_memalign)(size_t, size_t) = NULL;
+
+inline void init_real_functions() {
+    if (UNLIKELY(!real_malloc)) {
+        unhook_all();
+        real_malloc = (void* (*)(size_t)) dlsym(RTLD_NEXT, "malloc");
+        real_free = (void (*)(void*)) dlsym(RTLD_NEXT, "free");
+        real_memalign = (void* (*)(size_t, size_t)) dlsym(RTLD_NEXT, "memalign");
+
+        atexit(unhook_all);
+        hook_all();
+    }
+}
+
 // Allocate a block of size bytes. See Basic Allocation.
 void* malloc(size_t bytes) {
+    init_real_functions();
     // dl_sym does not call malloc
-    GENERATE_DLSYM(void*, malloc, size_t);
     if (!hook_active) 
         return real_malloc(bytes);
     unhook_all();
 
     void* ret = real_malloc(bytes); 
     printf("My malloc called for %lu bytes, returning %p \n", bytes, ret);
+    register_alloc(ret, bytes);
+
     memset(ret, 0, bytes);
 
     hook_all();
@@ -64,7 +79,7 @@ void* malloc(size_t bytes) {
 
 // Free a block previously allocated by malloc. See Freeing after Malloc.
 void free (void *addr) {
-    GENERATE_DLSYM(void, free, void*);
+    init_real_functions();
     if (!hook_active)  {
         real_free(addr);
         return;
@@ -73,8 +88,24 @@ void free (void *addr) {
 
     real_free(addr); // does not necessarily need to be protected
     printf("My free called on %p \n", addr);
+    unregister_alloc(addr);
     
     hook_all();
+}
+
+// Allocate a block of size bytes, starting on an address that is a multiple of boundary. See Aligned Memory Blocks.
+void *memalign (size_t alignment, size_t size) {
+    init_real_functions();
+    if (!hook_active)  
+        return real_memalign(alignment, size);
+    unhook_all();
+
+    void* ret = real_memalign(alignment, size);
+    register_alloc(ret, size); 
+    memset(ret, 0, size);
+
+    hook_all();
+    return ret;
 }
 
 // Make a block previously allocated by malloc larger or smaller, possibly by copying it to a new location. See Changing Block Size.
@@ -101,20 +132,6 @@ void *calloc (size_t count, size_t eltsize) {
     // I cannot let this guy go to libc
     printf("Calloc called. dlsym maybe? \n");
     return malloc(count * eltsize);
-}
-
-// Allocate a block of size bytes, starting on an address that is a multiple of boundary. See Aligned Memory Blocks.
-void *memalign (size_t alignment, size_t size) {
-    GENERATE_DLSYM(void *, memalign, size_t, size_t);
-    if (!hook_active)  
-        return real_memalign(alignment, size);
-    unhook_all();
-
-    void* ret = real_memalign(alignment, size); 
-    memset(ret, 0, size);
-
-    hook_all();
-    return ret;
 }
 
 // Allocate a block of size bytes, starting on a page boundary. See Aligned Memory Blocks.
