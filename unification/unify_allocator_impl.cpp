@@ -3,7 +3,6 @@
 #include <vector>
 #include <cstdint>
 #include <algorithm>
-#include <assert.h>
 #include <iostream>
 
 #include "unify_common.h"
@@ -23,29 +22,32 @@ struct alloc_entry {
 static std::vector<alloc_entry>* alloc_list = nullptr;
 static std::vector<bool>* free_list = nullptr;
 
-run manage_vectors(
-[](){
-    unhook_scope guard{};
-    alloc_list = new std::vector<alloc_entry>();
-    free_list = new std::vector<bool>();
-}, 
-[](){
-    unhook_scope guard{};
-    delete alloc_list;
-    delete free_list;
-});
-
 extern "C" {
 
-void* register_alloc(void* ptr, size_t bytes) {
+static void* force_register_alloc(void* ptr, size_t bytes) {
     if (!alloc_list || !free_list)
         return ptr;
     unhook_scope guard{};
+    printf("`register_alloc(%p, %lu)`;\n", ptr, bytes);
+
+    /*
+        In strict mode, pointers can point to one past an array
+        I therefore assume this is also a common target of 
+        integer conversions and include it here.
+        In relaxed mode, pointers may take on any value as long
+        as they're not dereferenced. Typical code operates in 
+        relaxed mode, so this implementation cannot protect against
+        arbitrary integer conversions. The 64bit implementation
+        stands a better chance at that.
+    */
     bytes += 1; // pointers may point to 1 past an array
 
     { // DEBUG
         auto again = std::find(alloc_list->begin(), alloc_list->end(), ptr);
-        assert(again == alloc_list->end()); // nullptr?
+        // should I do a more elaborate check here? To see if the ptr is contained 
+        // within a preexisting allocation? 
+
+        dbg_assert(again == alloc_list->end() && "register_alloc was called twice on the same pointer value"); 
     }
 
     // first fit
@@ -68,7 +70,7 @@ void* register_alloc(void* ptr, size_t bytes) {
         free_list->push_back(false);
     }
 
-    assert(free_list->size() == alloc_list->size());
+    dbg_assert(free_list->size() == alloc_list->size());
 
     printf("`register_alloc`(%p, %lu) returns %p\n", ptr, bytes, ptr);
     // printf("Current metadata: \n");
@@ -77,13 +79,24 @@ void* register_alloc(void* ptr, size_t bytes) {
     return ptr;
 }
 
-void* unregister_alloc(void* ptr) {
+void* register_alloc(void* ptr, size_t bytes) {
+    printf("Register_alloc called with hook = %s \n", hook_status() ? "true" : "false");
+    unhook_scope guard{};
+    if (!ptr)  {
+        printf("Attempt to register nullptr \n");
+        return nullptr;
+    }
+    return force_register_alloc(ptr, bytes);
+}
+
+static void* force_unregister_alloc(void* ptr) {
     if (!alloc_list || !free_list)
         return ptr;
     unhook_scope guard{};
     { // iterator invalidation protection
         auto entry = std::find(alloc_list->begin(), alloc_list->end(), ptr);
-        assert(entry != alloc_list->end());
+        dbg_assert(entry != alloc_list->end());
+        
         auto free = free_list->begin() + std::distance(alloc_list->begin(), entry);
         *free = true;
 
@@ -105,17 +118,27 @@ void* unregister_alloc(void* ptr) {
         alloc_list->pop_back();
     }
 
-    assert(free_list->size() == alloc_list->size());
-    assert(!*free_list->rbegin());
+    dbg_assert(free_list->size() == alloc_list->size());
+    dbg_assert(!*free_list->rbegin());
 
     printf("`unregister_alloc`(%p) returns %p\n", ptr, ptr);
 
     return ptr;
 }
 
+void* unregister_alloc(void* ptr) {
+    unhook_scope guard{};
+    if (ptr == nullptr) {
+        printf("Attempt to unregister nullptr \n");
+        return ptr;
+    }
+    return force_unregister_alloc(ptr);
+}
+
 uintptr_t unify(void* v_addr) {
     unhook_scope guard{};
     for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list->size(); idx++, occ_idx += alloc_list->at(idx).size) {
+        printf("`unify(%p)`: currently investigating idx %lu and occ_idx %lu \n", v_addr, idx, occ_idx);
         if (v_addr >= alloc_list->at(idx).allocation && v_addr <= (static_cast<char*>(alloc_list->at(idx).allocation) + alloc_list->at(idx).size)) {
             uintptr_t ret = occ_idx + (static_cast<char*>(v_addr) - static_cast<char*>(alloc_list->at(idx).allocation));
             printf("`unify(%p)` returns %lu \n", v_addr, ret);
@@ -123,7 +146,11 @@ uintptr_t unify(void* v_addr) {
         }
     }
 
-    assert(false && "v_addr was not contained in any of the alloc_entries!");
+    printf("got here \n");
+
+    printf("`unify(%p)` can't find %p \n", v_addr, v_addr);
+
+    dbg_assert(false && "v_addr was not contained in any of the alloc_entries!");
     return 0;
 }
 
@@ -137,14 +164,14 @@ void* deunify(uintptr_t u_addr) {
         }
     }
 
-    assert(false && "u_addr was not contained in any of the alloc_entries!");
+    dbg_assert(false && "u_addr was not contained in any of the alloc_entries!");
     return 0;
 }
 
 size_t size_of_alloc(void* ptr) {
     unhook_scope guard{};
     auto entry = std::find(alloc_list->begin(), alloc_list->end(), ptr);
-    assert(entry != alloc_list->end());
+    dbg_assert(entry != alloc_list->end());
     return entry->size - 1;
 }
 
@@ -175,9 +202,23 @@ void print_metadata() {
         sprintf(buffer, fmt, idx, occ_idx, alloc_list->at(idx).allocation, alloc_list->at(idx).size, free_list->at(idx) ? "true" : "false");
         printf("%s", buffer);
     }
-    printf("-----FINISH-----\n");
+    //printf("-----FINISH-----\n");
+    //fflush(stdout);
 }
 
 }
+
+run manage_vectors(
+[](){
+    unhook_scope guard{};
+    alloc_list = new std::vector<alloc_entry>();
+    free_list = new std::vector<bool>();
+    force_register_alloc(nullptr, 0);
+}, 
+[](){
+    unhook_scope guard{};
+    delete alloc_list;
+    delete free_list;
+});
 
 

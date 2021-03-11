@@ -10,7 +10,7 @@ UNIFICATION_DIR = $(ROOT_DIR)/unification
 
 dyn_alloc_zero: 
 	mkdir -p bin && \
-	$(CXX) $(CXXFLAGS) $@.c $(SELECTED_UNIFY_IMPL).cpp -shared -fPIC -Iinclude -o bin/lib$@.so
+	$(CXX) $(CXXFLAGS) $@.cpp $(SELECTED_UNIFY_IMPL).cpp -shared -fPIC -Iinclude -o bin/lib$@.so
 
 $(UNIFY_IMPLS):
 	mkdir -p bin && \

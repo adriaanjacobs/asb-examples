@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <algorithm>
-#include <assert.h>
 #include <iostream>
 
 #include "unify_common.h"
@@ -42,11 +41,11 @@ void* register_alloc(void* ptr, size_t bytes) {
      if (!alloc_list || !free_list)
         return ptr;
     unhook_scope guard{};
-    assert(bytes <= UINT32_MAX); 
+    dbg_assert(bytes <= UINT32_MAX); 
     
     { // DEBUG
         auto again = std::find(alloc_list->begin(), alloc_list->end(), ptr);
-        assert(again == alloc_list->end()); // this means nullptr right?
+        dbg_assert(again == alloc_list->end()); // this means nullptr right?
     }
 
     auto free = std::find(free_list->begin(), free_list->end(), true);
@@ -59,7 +58,7 @@ void* register_alloc(void* ptr, size_t bytes) {
         free_list->push_back(false);
     }
 
-    assert(alloc_list->size() == free_list->size());
+    dbg_assert(alloc_list->size() == free_list->size());
 
     return ptr;
 }
@@ -69,7 +68,7 @@ void* unregister_alloc(void* ptr) {
         return ptr;
     unhook_scope guard{};
     auto alloc = std::find(alloc_list->begin(), alloc_list->end(), ptr);
-    assert(alloc != alloc_list->end());
+    dbg_assert(alloc != alloc_list->end());
     size_t occ_idx = std::distance(alloc_list->begin(), alloc);
     free_list->at(occ_idx) = true;
     return ptr;
@@ -81,7 +80,7 @@ uintptr_t unify(void* v_addr) {
         // //This is not safe C. It will work though (I think) in flat memory model archs
         return v_addr >= ptr && v_addr < (static_cast<char*>(ptr) + ALIGNED_SIZE); 
     });
-    assert(alloc != alloc_list->end());
+    dbg_assert(alloc != alloc_list->end());
 
     uintptr_t occ_idx = std::distance(alloc_list->begin(), alloc) << OFFSET_WIDTH;
     occ_idx += (static_cast<char*>(v_addr) - static_cast<char*>(*alloc));

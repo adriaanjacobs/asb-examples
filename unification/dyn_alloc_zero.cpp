@@ -13,6 +13,7 @@
 #include <math.h>
 
 #include <unify.h>
+#include "unify_common.h"
 
 #define LIKELY(expr) __builtin_expect(!!(expr), 1)
 #define UNLIKELY(expr) __builtin_expect(!!(expr), 0)
@@ -43,13 +44,17 @@ void unhook_all() {
     hook_active = false;
 }
 
+bool hook_status() {
+    return hook_active;
+}
+
 static void* (*real_malloc)(size_t) = NULL;
 static void (*real_free)(void*) = NULL;
 static void* (*real_memalign)(size_t, size_t) = NULL;
 
 inline void init_real_functions() {
     if (UNLIKELY(!real_malloc)) {
-        unhook_all();
+        assert(hook_status() == false);
         real_malloc = (void* (*)(size_t)) dlsym(RTLD_NEXT, "malloc");
         real_free = (void (*)(void*)) dlsym(RTLD_NEXT, "free");
         real_memalign = (void* (*)(size_t, size_t)) dlsym(RTLD_NEXT, "memalign");
@@ -59,21 +64,24 @@ inline void init_real_functions() {
     }
 }
 
+void* malloc_zero(size_t bytes) {
+    void* ret = real_malloc(bytes);
+    memset(ret, 0, bytes);
+    return ret;
+}
+
 // Allocate a block of size bytes. See Basic Allocation.
 void* malloc(size_t bytes) {
     init_real_functions();
     // dl_sym does not call malloc
-    if (!hook_active) 
-        return real_malloc(bytes);
-    unhook_all();
+    if (!hook_active)  
+        return malloc_zero(bytes);
+    unhook_scope guard{};
 
-    void* ret = real_malloc(bytes); 
+    void* ret = malloc_zero(bytes); 
     printf("My malloc called for %lu bytes, returning %p \n", bytes, ret);
     register_alloc(ret, bytes);
 
-    memset(ret, 0, bytes);
-
-    hook_all();
     return ret;
 }
 
@@ -84,27 +92,29 @@ void free (void *addr) {
         real_free(addr);
         return;
     }
-    unhook_all();
+    unhook_scope guard{};
 
     real_free(addr); // does not necessarily need to be protected
     printf("My free called on %p \n", addr);
     unregister_alloc(addr);
-    
-    hook_all();
+}
+
+void* memalign_zero(size_t alignment, size_t size) {
+    void* ret = real_memalign(alignment, size);
+    memset(ret, 0, size);
+    return ret;
 }
 
 // Allocate a block of size bytes, starting on an address that is a multiple of boundary. See Aligned Memory Blocks.
 void *memalign (size_t alignment, size_t size) {
     init_real_functions();
     if (!hook_active)  
-        return real_memalign(alignment, size);
-    unhook_all();
+        return memalign_zero(alignment, size);
+    unhook_scope guard{};
 
-    void* ret = real_memalign(alignment, size);
+    void* ret = memalign_zero(alignment, size);
     register_alloc(ret, size); 
-    memset(ret, 0, size);
 
-    hook_all();
     return ret;
 }
 
@@ -116,6 +126,8 @@ void *realloc (void *addr, size_t size) {
     //
     // Also, I haven't thought about how to actually deal with allocation resizing yet.
     void* newblock = malloc(size);
+    unhook_scope guard{};
+    printf("realloc(%p, %lu) returns %p\n", addr, size, newblock);
     memcpy(newblock, addr, fmin(size, size_of_alloc(addr)));
     free(addr);
     return newblock;
