@@ -80,7 +80,6 @@ static void* force_register_alloc(void* ptr, size_t bytes) {
 }
 
 void* register_alloc(void* ptr, size_t bytes) {
-    printf("Register_alloc called with hook = %s \n", hook_status() ? "true" : "false");
     unhook_scope guard{};
     if (!ptr)  {
         printf("Attempt to register nullptr \n");
@@ -137,16 +136,13 @@ void* unregister_alloc(void* ptr) {
 
 uintptr_t unify(void* v_addr) {
     unhook_scope guard{};
-    for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list->size(); idx++, occ_idx += alloc_list->at(idx).size) {
-        printf("`unify(%p)`: currently investigating idx %lu and occ_idx %lu \n", v_addr, idx, occ_idx);
+    for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list->size(); occ_idx += alloc_list->at(idx++).size) {
         if (v_addr >= alloc_list->at(idx).allocation && v_addr <= (static_cast<char*>(alloc_list->at(idx).allocation) + alloc_list->at(idx).size)) {
             uintptr_t ret = occ_idx + (static_cast<char*>(v_addr) - static_cast<char*>(alloc_list->at(idx).allocation));
             printf("`unify(%p)` returns %lu \n", v_addr, ret);
             return ret;
         }
     }
-
-    printf("got here \n");
 
     printf("`unify(%p)` can't find %p \n", v_addr, v_addr);
 
@@ -156,7 +152,7 @@ uintptr_t unify(void* v_addr) {
 
 void* deunify(uintptr_t u_addr) {
     unhook_scope guard{};
-    for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list->size(); idx++, occ_idx += alloc_list->at(idx).size) {
+    for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list->size(); occ_idx += alloc_list->at(idx++).size) {
         if (u_addr >= occ_idx && u_addr <= occ_idx + alloc_list->at(idx).size) {
             void* ret = static_cast<char*>(alloc_list->at(idx).allocation) + (u_addr - occ_idx);
             printf("`deunify(%lu)` returns %p \n", u_addr, ret);
@@ -175,35 +171,21 @@ size_t size_of_alloc(void* ptr) {
     return entry->size - 1;
 }
 
-// void print_metadata() {
-//     std::cout << "----------------" << std::endl;
-//     for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list->size(); idx++, occ_idx += alloc_list->at(idx).size) {
-//         std::cout << "idx: " << idx << std::endl;
-//         std::cout << "occ_idx: " << occ_idx << std::endl;
-//         std::cout << "  allocation: " << alloc_list->at(idx).allocation << std::endl;
-//         std::cout << "  size: " << alloc_list->at(idx).size << std::endl;
-//         std::cout << "  free: " << free_list->at(idx) << std::endl;
-//         std::cout << "----------------" << std::endl;
-//     }
-// }
-
-
-// This is used for debugging and should not dynamically allocate memory 
-// Actually with the guard now it can
 void print_metadata() {
     unhook_scope guard{};
-    printf("------START-----\n");
-    printf("Size of alloc_list: %lu\n", alloc_list->size());
-    printf("Size of free_list: %lu\n", free_list->size());
-    printf("----------------\n");
-    for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list->size(); idx++, occ_idx += alloc_list->at(idx).size) {
-        char fmt[] = "idx: %lu \n" "occ_idx: %lu \n" "  allocation: %p \n" "  size: %lu \n" "  free: %s \n" "----------------\n";
-        char buffer[1000] = {'\0'};
-        sprintf(buffer, fmt, idx, occ_idx, alloc_list->at(idx).allocation, alloc_list->at(idx).size, free_list->at(idx) ? "true" : "false");
-        printf("%s", buffer);
+    std::cout << "----PRINT-METADATA----" << std::endl;
+    std::cout << "Size of alloc_list: " << alloc_list->size() << std::endl;
+    std::cout << "Size of free_list: " << free_list->size() << std::endl;
+    std::cout << "----------------" << std::endl;
+    for (uintptr_t idx = 0, occ_idx = 0; idx < alloc_list->size(); occ_idx += alloc_list->at(idx++).size) {
+        std::cout << "idx: " << idx << std::endl;
+        std::cout << "occ_idx: " << occ_idx << std::endl;
+        std::cout << "  allocation: " << alloc_list->at(idx).allocation << std::endl;
+        std::cout << "  size: " << alloc_list->at(idx).size << std::endl;
+        std::cout << "  free: " << free_list->at(idx) << std::endl;
+        std::cout << "----------------" << std::endl;
     }
-    //printf("-----FINISH-----\n");
-    //fflush(stdout);
+    std::cout << "-----END-METADATA-----" << std::endl;
 }
 
 }

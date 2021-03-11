@@ -106,7 +106,7 @@ void* memalign_zero(size_t alignment, size_t size) {
 }
 
 // Allocate a block of size bytes, starting on an address that is a multiple of boundary. See Aligned Memory Blocks.
-void *memalign (size_t alignment, size_t size) {
+void* memalign (size_t alignment, size_t size) {
     init_real_functions();
     if (!hook_active)  
         return memalign_zero(alignment, size);
@@ -119,7 +119,7 @@ void *memalign (size_t alignment, size_t size) {
 }
 
 // Make a block previously allocated by malloc larger or smaller, possibly by copying it to a new location. See Changing Block Size.
-void *realloc (void *addr, size_t size) {
+void* realloc (void *addr, size_t size) {
     // Since I can't know the size of the block without using 
     // implementation-specific tactics, I can only use 
     // the allocator unification implementation here
@@ -134,23 +134,20 @@ void *realloc (void *addr, size_t size) {
 }
 
 // Change the size of a block previously allocated by malloc to nmemb * size bytes as with realloc. See Changing Block Size.
-void *reallocarray (void *ptr, size_t nmemb, size_t size) {
+void* reallocarray (void *ptr, size_t nmemb, size_t size) {
     return realloc(ptr, nmemb * size);
 }
 
 // Allocate a block of count * eltsize bytes using malloc, and set its contents to zero. See Allocating Cleared Space.
-void *calloc (size_t count, size_t eltsize) {
-    if (!real_malloc)
-        return NULL; // Do not ask me why, but dlsym is totally fine with a nullptr here
+void* calloc (size_t count, size_t eltsize) {
+    if (UNLIKELY(!real_malloc))   // Since dlsym calls `calloc` when linked with pthread
+        return nullptr; // Do not ask me why, but dlsym is totally fine with a nullptr here
 
-    // Since dlsym calls `calloc` when linked with pthread
-    // I cannot let this guy go to libc
-    printf("Calloc called. dlsym maybe? \n");
     return malloc(count * eltsize);
 }
 
 // Allocate a block of size bytes, starting on a page boundary. See Aligned Memory Blocks.
-void *valloc (size_t size) {
+void* valloc (size_t size) {
     return memalign(getpagesize(), size);
 }
 

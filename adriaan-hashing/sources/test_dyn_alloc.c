@@ -30,12 +30,11 @@ int main() {
 
     {
         void *a = malloc(size);
-        printf("I just mallocced right? \n");
         memset(a, 0xdeadbeef, size);
         free((a));
     }
 
-    //print_metadata();
+    print_metadata();
 
     char* block = malloc(size);
     char* zeroblock = calloc(1, size);
