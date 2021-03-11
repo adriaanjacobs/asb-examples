@@ -140,6 +140,9 @@ void *reallocarray (void *ptr, size_t nmemb, size_t size) {
 
 // Allocate a block of count * eltsize bytes using malloc, and set its contents to zero. See Allocating Cleared Space.
 void *calloc (size_t count, size_t eltsize) {
+    if (!real_malloc)
+        return NULL; // Do not ask me why, but dlsym is totally fine with a nullptr here
+
     // Since dlsym calls `calloc` when linked with pthread
     // I cannot let this guy go to libc
     printf("Calloc called. dlsym maybe? \n");
