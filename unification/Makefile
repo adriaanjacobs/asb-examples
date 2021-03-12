@@ -1,14 +1,18 @@
-UNIFY_IMPLS = unify_allocator_impl unify_64bit_impl
+UNIFY_IMPLS = unify_allocator_impl unify_64bit_impl unify_page_granular
 
-SELECTED_UNIFY_IMPL = unify_allocator_impl
+INTERPOSE_LIBS = dyn_alloc_zero mmap_interpose
+
+SELECTED_UNIFY_IMPL = unify_64bit_impl
 
 UNIFICATION_DIR = $(ROOT_DIR)/unification
 
-.PHONY: dyn_alloc_zero $(UNIFY_IMPLS)
+.PHONY: $(INTERPOSE_LIBS) $(UNIFY_IMPLS)
+
+default: dyn_alloc_zero
 
 #ln -sf $(UNIFICATION_DIR)/bin/lib$(SELECTED_UNIFY_IMPL).a $(UNIFICATION_DIR)/bin/libunify.a
 
-dyn_alloc_zero: 
+$(INTERPOSE_LIBS): 
 	mkdir -p bin && \
 	$(CXX) $(CXXFLAGS) $@.cpp $(SELECTED_UNIFY_IMPL).cpp -shared -fPIC -Iinclude -o bin/lib$@.so
 

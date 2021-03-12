@@ -10,7 +10,7 @@ export CXX = clang++-10
 
 export ROOT_DIR = $(shell pwd)
 
-export USE_UNIFICATION_LIB = -I$(ROOT_DIR)/unification/include -L$(ROOT_DIR)/unification/bin -ldyn_alloc_zero -lstdc++ -ldl
+export USE_UNIFICATION_LIB = -I$(ROOT_DIR)/unification/include -L$(ROOT_DIR)/unification/bin -ldyn_alloc_zero -lpthread -lstdc++ -ldl
 
 .PHONY: all $(TARGETS) clean codeql codeql-clean unification
 

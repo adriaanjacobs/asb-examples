@@ -1,20 +1,26 @@
 #include <stdlib.h>
 #include <functional>
+#include <malloc.h>
 
-#if 0
+#if 1
     #define BOOST_STACKTRACE_USE_ADDR2LINE
     #include <boost/stacktrace.hpp>
+    #include <iostream>
 #endif
 
 #include "dyn_alloc_zero.h"
 
 // std::cout << boost::stacktrace::stacktrace() << std::endl; 
-
+// //print_metadata();      
 #define dbg_assert(expr) \
     do {                        \
         if (!!!(expr)) {        \
-            unhook_all();           \
+            override_unhook_all();           \
             printf("%s:%d: Assertion `" #expr "` failed. \n", __FILE__, __LINE__);  \
+            printf("Metadata on fail: \n");    \
+            std::cout << boost::stacktrace::stacktrace();  \
+            printf("ASB: Exited with error. \n");  \
+            fflush(stdout);  \
             exit(-1);  \
         }                       \
     } while (false)

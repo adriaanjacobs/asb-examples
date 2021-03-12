@@ -24,10 +24,11 @@ static std::vector<bool>* free_list = nullptr;
 
 extern "C" {
 
-static void* force_register_alloc(void* ptr, size_t bytes) {
+static void* force_register_alloc(void* ptr) {
     if (!alloc_list || !free_list)
         return ptr;
     unhook_scope guard{};
+    size_t bytes = malloc_usable_size(ptr);
     printf("`register_alloc(%p, %lu)`;\n", ptr, bytes);
 
     /*
@@ -79,13 +80,13 @@ static void* force_register_alloc(void* ptr, size_t bytes) {
     return ptr;
 }
 
-void* register_alloc(void* ptr, size_t bytes) {
+void* register_alloc(void* ptr) {
     unhook_scope guard{};
     if (!ptr)  {
         printf("Attempt to register nullptr \n");
         return nullptr;
     }
-    return force_register_alloc(ptr, bytes);
+    return force_register_alloc(ptr);
 }
 
 static void* force_unregister_alloc(void* ptr) {
@@ -127,7 +128,7 @@ static void* force_unregister_alloc(void* ptr) {
 
 void* unregister_alloc(void* ptr) {
     unhook_scope guard{};
-    if (ptr == nullptr) {
+    if (!ptr) {
         printf("Attempt to unregister nullptr \n");
         return ptr;
     }
@@ -162,13 +163,6 @@ void* deunify(uintptr_t u_addr) {
 
     dbg_assert(false && "u_addr was not contained in any of the alloc_entries!");
     return 0;
-}
-
-size_t size_of_alloc(void* ptr) {
-    unhook_scope guard{};
-    auto entry = std::find(alloc_list->begin(), alloc_list->end(), ptr);
-    dbg_assert(entry != alloc_list->end());
-    return entry->size - 1;
 }
 
 void print_metadata() {

@@ -37,11 +37,16 @@ int main() {
     print_metadata();
 
     char* block = malloc(size);
+    char* aligned_block = memalign(sizeof(double), size);
+    free(aligned_block);
     char* zeroblock = calloc(1, size);
 
     printf("is memory the same? %d\n", memcmp(block, zeroblock, size) == 0);
 
-    //print_metadata();
+    print_metadata();
+
+    long long diff = (((char*)NULL) - ((char*)NULL));
+    printf("Diff: %lld \n", diff);
 
     printf("The unified NULL value: %lu \n", unify(NULL));
 

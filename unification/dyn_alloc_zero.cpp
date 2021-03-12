@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <math.h>
+#include <malloc.h>
+#include <atomic>
 
 #include <unify.h>
 #include "unify_common.h"
@@ -34,7 +36,16 @@
 extern "C" {
 #endif
 
-static __thread bool hook_active = false;
+static __thread std::atomic_bool hook_active {false};
+static __thread std::atomic_bool hook_override_active {false};
+
+void override_hook_all() {
+    hook_override_active = true;
+}
+
+void override_unhook_all() {
+    hook_override_active = false;
+}
 
 void hook_all() {
     hook_active = true;
@@ -45,8 +56,15 @@ void unhook_all() {
 }
 
 bool hook_status() {
-    return hook_active;
+    return hook_active && hook_override_active;
 }
+
+/*
+    Other means of allocation I should still cover:
+        1. mmap family for custom application-specific allocators 
+        2. sbrk family 
+        3. alloca 
+*/
 
 static void* (*real_malloc)(size_t) = NULL;
 static void (*real_free)(void*) = NULL;
@@ -59,7 +77,8 @@ inline void init_real_functions() {
         real_free = (void (*)(void*)) dlsym(RTLD_NEXT, "free");
         real_memalign = (void* (*)(size_t, size_t)) dlsym(RTLD_NEXT, "memalign");
 
-        atexit(unhook_all);
+        atexit(override_unhook_all);
+        override_hook_all();
         hook_all();
     }
 }
@@ -74,13 +93,14 @@ void* malloc_zero(size_t bytes) {
 void* malloc(size_t bytes) {
     init_real_functions();
     // dl_sym does not call malloc
-    if (!hook_active)  
+    if (!hook_status())  
         return malloc_zero(bytes);
     unhook_scope guard{};
 
     void* ret = malloc_zero(bytes); 
-    printf("My malloc called for %lu bytes, returning %p \n", bytes, ret);
-    register_alloc(ret, bytes);
+    //printf("My malloc called for %lu bytes, returning %p \n", bytes, ret);
+    if (ret)
+        register_alloc(ret);
 
     return ret;
 }
@@ -88,15 +108,16 @@ void* malloc(size_t bytes) {
 // Free a block previously allocated by malloc. See Freeing after Malloc.
 void free (void *addr) {
     init_real_functions();
-    if (!hook_active)  {
+    if (!hook_status())  {
         real_free(addr);
         return;
     }
     unhook_scope guard{};
 
     real_free(addr); // does not necessarily need to be protected
-    printf("My free called on %p \n", addr);
-    unregister_alloc(addr);
+    //printf("My free called on %p \n", addr);
+    if (addr)
+        unregister_alloc(addr);
 }
 
 void* memalign_zero(size_t alignment, size_t size) {
@@ -108,12 +129,13 @@ void* memalign_zero(size_t alignment, size_t size) {
 // Allocate a block of size bytes, starting on an address that is a multiple of boundary. See Aligned Memory Blocks.
 void* memalign (size_t alignment, size_t size) {
     init_real_functions();
-    if (!hook_active)  
+    if (!hook_status())  
         return memalign_zero(alignment, size);
     unhook_scope guard{};
 
     void* ret = memalign_zero(alignment, size);
-    register_alloc(ret, size); 
+    if (ret)
+        register_alloc(ret); 
 
     return ret;
 }
@@ -127,8 +149,8 @@ void* realloc (void *addr, size_t size) {
     // Also, I haven't thought about how to actually deal with allocation resizing yet.
     void* newblock = malloc(size);
     unhook_scope guard{};
-    printf("realloc(%p, %lu) returns %p\n", addr, size, newblock);
-    memcpy(newblock, addr, fmin(size, size_of_alloc(addr)));
+    //printf("realloc(%p, %lu) returns %p\n", addr, size, newblock);
+    memcpy(newblock, addr, fmin(size, malloc_usable_size(addr)));
     free(addr);
     return newblock;
 }

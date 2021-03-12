@@ -33,19 +33,17 @@ extern "C" {
     and also destruct them without registration. I think this fully works.
 */
 
-void* register_alloc(void* ptr, size_t bytes);
+void* register_page(void* ptr, size_t amount);
+
+void* unregister_page(void* ptr, size_t amount);
+
+void* register_alloc(void* ptr);
 
 void* unregister_alloc(void* ptr);
 
 uintptr_t unify(void* v_addr);
 
 void* deunify(uintptr_t u_addr);
-
-// I don't think every allocation algorithm implementation exposes this. 
-// Maybe only the aligned_up size? Would not be a problem as long as it's the 
-// aligned_up size used by the allocator implementation, not just any
-// that I could use for it.
-size_t size_of_alloc(void* ptr);
 
 void print_metadata();
 

@@ -4,7 +4,7 @@
 
 UNIFICATION_DIR = $(ROOT_DIR)/unification
 
-TESTS = test_hashing test_ptr2int2ptr test_dyn_alloc
+TESTS = test_hashing test_ptr2int2ptr test_dyn_alloc test_page_granular
 
 adriaan-hashing: $(TESTS)
 
