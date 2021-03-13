@@ -1,7 +1,18 @@
 
 TARGETS = hatasi-hashing padded-struct print_struct adriaan-hashing uninitialized-value # glib-hashing 
 
-FLAGS = -O0 -fPIC -ggdb -g -Wall -Wextra -pedantic -Wno-int-conversion -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
+WRAPPED = -Wl,-wrap,malloc, \
+			-Wl,-wrap,free, \
+			-Wl,-wrap,memalign, \
+			-Wl,-wrap,realloc, \
+			-Wl,-wrap,reallocarray, \
+			-Wl,-wrap,calloc, \
+			-Wl,-wrap,valloc, \
+			-Wl,-wrap,aligned_alloc, \
+			-Wl,-wrap,posix_memalign 
+
+
+FLAGS = $(WRAPPED) -O0 -fPIC -ggdb -g -Wall -Wextra -pedantic -Wno-int-conversion -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
 export CFLAGS = $(FLAGS) -std=c99 
 export CXXFLAGS = $(FLAGS) -std=c++20 
 
@@ -10,7 +21,7 @@ export CXX = clang++-10
 
 export ROOT_DIR = $(shell pwd)
 
-export USE_UNIFICATION_LIB = -I$(ROOT_DIR)/unification/include -L$(ROOT_DIR)/unification/bin -ldyn_alloc_zero -lpthread -lstdc++ -ldl
+export USE_UNIFICATION_LIB = -I$(ROOT_DIR)/unification/include -L$(ROOT_DIR)/unification/bin -ldyn_alloc_wrappers -lpthread -lstdc++ -ldl
 
 .PHONY: all $(TARGETS) clean codeql codeql-clean unification
 

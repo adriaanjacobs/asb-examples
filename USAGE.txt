@@ -1,0 +1,17 @@
+-Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,memalign -Wl,-wrap,realloc -Wl,-wrap,reallocarray -Wl,-wrap,calloc -Wl,-wrap,valloc -Wl,-wrap,aligned_alloc -Wl,-wrap,posix_memalign -L/home/adriaan/Documents/asb-examples/unification/bin/
+
+-ldyn_alloc_wrappers
+
+--wrap=malloc, --wrap=free, --wrap=memalign, --wrap=realloc, --wrap=reallocarray, --wrap=calloc, --wrap=valloc, --wrap=aligned_alloc, --wrap=posix_memalign
+
+
+FLAGS = -fno-builtin-malloc -fno-builtin-free -fno-builtin-memalign -fno-builtin-realloc -fno-builtin-reallocarray -fno-builtin-calloc -fno-builtin-valloc -fno-builtin-aligned_alloc -fno-builtin-posix_memalign 
+
+
+
+COREUTILS:
+add the libdyn_alloc_wrappers.so directory to /etc/ld.conf (smt like that, during compilation the coreutils invoke some executables and they need the library)
+
+LDFLAGS='-Wl,-wrap,malloc -Wl,-wrap,free -Wl,-wrap,memalign -Wl,-wrap,realloc -Wl,-wrap,reallocarray -Wl,-wrap,calloc -Wl,-wrap,valloc -Wl,-wrap,aligned_alloc -Wl,-wrap,posix_memalign -L/home/adriaan/Documents/asb-examples/unification/bin/' LIBS='-ldyn_alloc_wrappers -ldl -lstdc++' ./configure
+
+make CFLAGS='-Wno-error=suggest-attribute=const'
